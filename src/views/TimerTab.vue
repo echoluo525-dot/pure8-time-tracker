@@ -7,15 +7,15 @@
 
     <!-- 计时器区域 -->
     <div class="timer-section">
-      <div class="timer-circle" :class="{ paused: !stopwatch.running }">
+      <div class="timer-circle" :class="{ paused: !isRunning, running: isRunning }">
         {{ formattedTime }}
       </div>
       <button
         class="timer-button"
-        :class="stopwatch.running ? 'stop' : 'start'"
+        :class="isRunning ? 'stop' : 'start'"
         @click="toggleTimer"
       >
-        {{ stopwatch.running ? '停止计时' : '开始计时' }}
+        {{ isRunning ? '停止计时' : '开始计时' }}
       </button>
     </div>
 
@@ -71,6 +71,9 @@ import type { TimeRecord } from '@/types';
 // 秒表实例
 const stopwatch = new Stopwatch();
 
+// 用响应式 tick 计数器驱动 UI 更新
+const tick = ref(0);
+
 // UI状态
 const showStats = ref(false);
 
@@ -80,10 +83,14 @@ const todayRecords = ref<TimeRecord[]>(dataManager.getTodayRecords());
 // 用户目标（秒）
 const userGoalSeconds = computed(() => dataManager.getUserGoal());
 
+// 是否正在计时（响应式）
+const isRunning = ref(false);
+
 /**
- * 格式化显示时间
+ * 格式化显示时间（依赖 tick 触发重新计算）
  */
 const formattedTime = computed(() => {
+  tick.value; // 依赖 tick，每次 tick 变化时重新计算
   return formatTime(stopwatch.elapsedSeconds);
 });
 
@@ -117,9 +124,9 @@ function toggleTimer(): void {
     // 停止计时
     stopwatch.pause();
 
-    // 保存记录
-    const duration = Math.floor(stopwatch.elapsedSeconds);
-    if (duration > 0) {
+    // 保存记录（至少5秒才保存，避免误触产生0m记录）
+    const duration = Math.round(stopwatch.elapsedSeconds);
+    if (duration >= 5) {
       const record: TimeRecord = {
         start: Date.now() - duration * 1000,
         duration
@@ -132,20 +139,21 @@ function toggleTimer(): void {
 
     // 重置秒表
     stopwatch.reset();
+    isRunning.value = false;
   } else {
     // 开始计时
     stopwatch.start();
+    isRunning.value = true;
   }
 }
 
-// 定时更新显示
+// 定时更新显示：每秒递增 tick 驱动 computed 重算
 let updateInterval: number | null = null;
 
 if (typeof window !== 'undefined') {
   updateInterval = window.setInterval(() => {
     if (stopwatch.running) {
-      // 触发重新渲染
-      formattedTime.value;
+      tick.value++;
     }
   }, 1000);
 }

@@ -33,9 +33,12 @@ export function formatDuration(seconds: number): string {
 /**
  * 格式化时长简写
  * @param seconds 秒数
- * @returns 格式化的时长字符串 XhYm
+ * @returns 格式化的时长字符串 XhYm 或 XmYs
  */
 export function formatDurationShort(seconds: number): string {
+  if (seconds < 60) {
+    return `${Math.floor(seconds)}s`;
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
 
