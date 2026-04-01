@@ -120,7 +120,7 @@ const goalProgress = computed(() => {
  * 切换计时器状态
  */
 function toggleTimer(): void {
-  if (stopwatch.running) {
+  if (isRunning.value) {
     // 停止计时
     stopwatch.pause();
 
@@ -207,8 +207,19 @@ onUnmounted(() => {
 }
 
 .timer-circle.paused {
-  border-color: var(--color-warning);
-  color: var(--color-warning);
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.timer-circle.running {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.2); }
+  50% { box-shadow: 0 0 0 16px rgba(24, 144, 255, 0); }
 }
 
 .timer-button {
