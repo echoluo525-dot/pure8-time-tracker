@@ -52,29 +52,36 @@ export function clearStoredUser(): void {
 
 /**
  * 初始化 Google Identity Services
- * 返回 Promise，resolve 时说明 GIS 已就绪
+ * 返回 Promise，resolve 时说明 GIS 已就绪（或超时）
  */
-export function initGoogleAuth(): Promise<void> {
+export function initGoogleAuth(): Promise<boolean> {
   return new Promise((resolve) => {
     // 如果已经加载过，直接返回
     if (window.google?.accounts?.id) {
-      resolve();
+      resolve(true);
       return;
     }
+
+    let resolved = false;
+    const done = (ok: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+      resolve(ok);
+    };
 
     // 等待 GIS SDK 加载
     const checkInterval = setInterval(() => {
       if (window.google?.accounts?.id) {
-        clearInterval(checkInterval);
-        resolve();
+        done(true);
       }
-    }, 100);
+    }, 200);
 
-    // 超时 10 秒
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      resolve();
-    }, 10000);
+    // 超时 5 秒
+    const timeout = setTimeout(() => {
+      done(false);
+    }, 5000);
   });
 }
 
