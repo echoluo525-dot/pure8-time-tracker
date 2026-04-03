@@ -35,6 +35,17 @@ export interface AppData {
   projects: Project[];
   currentProjectId: string | null;
   userGoal: UserGoal;
+  userId?: string;  // Google 用户 ID，用于区分用户数据
+}
+
+/**
+ * Google 用户信息（从 JWT 解析）
+ */
+export interface GoogleUser {
+  sub: string;        // Google 唯一用户 ID
+  email: string;
+  name: string;
+  picture: string;    // 头像 URL
 }
 
 /**
